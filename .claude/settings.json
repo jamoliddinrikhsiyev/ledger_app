@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat ~/.claude.json 2>/dev/null | head -c 3000; echo \"---\"; ls ~/.claude/ 2>/dev/null)",
+      "Read(//Users/jrikhsiev/**)",
+      "Read(//Users/jrikhsiev/.claude/**)"
+    ]
+  }
+}

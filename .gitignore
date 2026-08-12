@@ -1,0 +1,124 @@
+# ---------------------------------------------------------------------------
+# Dependencies
+# ---------------------------------------------------------------------------
+node_modules/
+.pnp
+.pnp.js
+
+# ---------------------------------------------------------------------------
+# Build output
+# ---------------------------------------------------------------------------
+dist/
+dist-ssr/
+*.local
+
+# Incremental typecheck state (tsc -b).
+*.tsbuildinfo
+
+# Bundler and linter caches.
+.vite/
+.cache/
+.oxlintcache
+.eslintcache
+
+# ---------------------------------------------------------------------------
+# Secrets and local config
+# ---------------------------------------------------------------------------
+# The service kill switch and any provider credentials live here. `.env.example`
+# is the documented template and must stay tracked.
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------------
+# Generated assets
+# ---------------------------------------------------------------------------
+# Copied out of node_modules by scripts/copy-wasm.mjs on postinstall. Tracking
+# it would pin a 650 kB binary that must match the pinned sql.js version — let
+# the script own it instead.
+public/assets/sql-wasm.wasm
+
+# ---------------------------------------------------------------------------
+# Test and tooling output
+# ---------------------------------------------------------------------------
+# Screenshots from scripts/drive-app.mjs.
+.screenshots/
+
+# Playwright, if reporters are added later.
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+coverage/
+
+# ---------------------------------------------------------------------------
+# Capacitor native projects
+# ---------------------------------------------------------------------------
+# Ignored while both are pristine `npx cap add` output: nothing native has been
+# customised, and ios/ is slated for regeneration under CocoaPods (see README).
+#
+# START TRACKING THEM the moment you touch anything native — app icons, splash
+# screens, Info.plist, AndroidManifest, permissions, signing. `cap add` only
+# regenerates a blank template, so that work is unrecoverable if it stays
+# untracked. To switch: delete the two lines below and uncomment the block
+# under them, which keeps the projects but ignores their build artifacts.
+ios/
+android/
+
+# ios/App/App/public/
+# ios/App/Pods/
+# ios/App/App.xcworkspace/xcuserdata/
+# ios/App/App.xcodeproj/xcuserdata/
+# ios/App/App/capacitor.config.json
+# ios/DerivedData/
+# ios/capacitor-cordova-ios-plugins/
+# *.xcuserstate
+#
+# android/app/src/main/assets/public/
+# android/app/src/main/assets/capacitor.config.json
+# android/app/build/
+# android/build/
+# android/.gradle/
+# android/local.properties
+# android/capacitor-cordova-android-plugins/
+# android/app/release/
+# *.keystore
+# !debug.keystore
+
+# ---------------------------------------------------------------------------
+# Logs
+# ---------------------------------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ---------------------------------------------------------------------------
+# Editors
+# ---------------------------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# ---------------------------------------------------------------------------
+# OS
+# ---------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini

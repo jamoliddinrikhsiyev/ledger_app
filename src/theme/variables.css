@@ -1,0 +1,89 @@
+/**
+ * Theme tokens.
+ *
+ * PLACEHOLDER — these are neutral dark values so the shell is legible before
+ * the design is imported. They get replaced by the tokens from the design's
+ * `nocturne.css`; component code should read these variables rather than
+ * hard-coding colours, so that swap stays confined to this file.
+ */
+
+:root {
+  --ion-background-color: #0b0d12;
+  --ion-background-color-rgb: 11, 13, 18;
+
+  --ion-text-color: #e8eaf0;
+  --ion-text-color-rgb: 232, 234, 240;
+
+  --ion-color-step-50: #14171f;
+  --ion-color-step-100: #1a1e28;
+  --ion-color-step-150: #202531;
+  --ion-color-step-200: #262c3a;
+  --ion-color-step-250: #2c3343;
+  --ion-color-step-300: #333b4d;
+  --ion-color-step-350: #3a4356;
+  --ion-color-step-400: #414b60;
+  --ion-color-step-450: #4a5569;
+  --ion-color-step-500: #545f73;
+  --ion-color-step-550: #616c80;
+  --ion-color-step-600: #6f798d;
+  --ion-color-step-650: #7e879a;
+  --ion-color-step-700: #8e96a7;
+  --ion-color-step-750: #9fa6b5;
+  --ion-color-step-800: #b1b7c3;
+  --ion-color-step-850: #c4c9d2;
+  --ion-color-step-900: #d7dae1;
+  --ion-color-step-950: #eceef2;
+
+  --ion-item-background: #14171f;
+  --ion-card-background: #14171f;
+  --ion-toolbar-background: #0b0d12;
+  --ion-tab-bar-background: #0f1219;
+  --ion-border-color: #262c3a;
+
+  /* Semantic tokens the finance screens use. */
+  --ledger-positive: #3ddc97;
+  --ledger-negative: #ff6b6b;
+  --ledger-muted: var(--ion-color-step-650);
+}
+
+:root {
+  --ion-color-primary: #6c8cff;
+  --ion-color-primary-rgb: 108, 140, 255;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #5f7ce0;
+  --ion-color-primary-tint: #7b98ff;
+
+  --ion-color-success: #3ddc97;
+  --ion-color-success-rgb: 61, 220, 151;
+  --ion-color-success-contrast: #00160d;
+  --ion-color-success-contrast-rgb: 0, 22, 13;
+  --ion-color-success-shade: #36c285;
+  --ion-color-success-tint: #50e0a2;
+
+  --ion-color-danger: #ff6b6b;
+  --ion-color-danger-rgb: 255, 107, 107;
+  --ion-color-danger-contrast: #2a0000;
+  --ion-color-danger-contrast-rgb: 42, 0, 0;
+  --ion-color-danger-shade: #e05e5e;
+  --ion-color-danger-tint: #ff7a7a;
+
+  --ion-color-warning: #ffc857;
+  --ion-color-warning-rgb: 255, 200, 87;
+  --ion-color-warning-contrast: #2a1d00;
+  --ion-color-warning-contrast-rgb: 42, 29, 0;
+  --ion-color-warning-shade: #e0b04d;
+  --ion-color-warning-tint: #ffce68;
+
+  --ion-color-medium: #7e879a;
+  --ion-color-medium-rgb: 126, 135, 154;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #6f7787;
+  --ion-color-medium-tint: #8b93a4;
+}
+
+body {
+  background: var(--ion-background-color);
+  color: var(--ion-text-color);
+}
