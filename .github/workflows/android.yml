@@ -1,0 +1,62 @@
+name: Android APK
+
+# Builds an installable debug APK in the cloud, so no Android SDK or JDK is
+# needed locally. Run it from the Actions tab (Run workflow) or on a push.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          # Gradle 8.14 + AGP 8.13 need 17+; 21 is the current LTS.
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      # variables.gradle pins compileSdk/targetSdk 36; the runner image does not
+      # always ship that platform, so request it explicitly.
+      - name: Install Android platform 36
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      # `npm ci` runs postinstall, which copies sql-wasm.wasm into public/assets.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify
+        run: npm run verify
+
+      - name: Build web bundle
+        run: npm run build
+
+      # android/ is gitignored while nothing native is customised, so the
+      # project is regenerated here. Once you commit android/ (see .gitignore),
+      # this step becomes a no-op and your customisations are preserved.
+      - name: Ensure Android project
+        run: |
+          if [ ! -d android ]; then
+            npx cap add android
+          fi
+          npx cap sync android
+
+      - name: Assemble debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ledger-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
