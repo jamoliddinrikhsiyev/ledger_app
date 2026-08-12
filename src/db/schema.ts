@@ -118,6 +118,45 @@ export const MIGRATIONS: Migration[] = [
       `CREATE INDEX IF NOT EXISTS idx_rates_base ON exchange_rates(base);`,
     ],
   },
+
+  {
+    version: 3,
+    statements: [
+      // Savings goals. `saved` is held on the row rather than derived: money
+      // moved into a goal is an intent the user states, not something that can
+      // be inferred from the transaction log.
+      `CREATE TABLE IF NOT EXISTS goals (
+         id        TEXT PRIMARY KEY NOT NULL,
+         name      TEXT NOT NULL,
+         icon      TEXT,
+         target    INTEGER NOT NULL,
+         saved     INTEGER NOT NULL DEFAULT 0,
+         perMonth  INTEGER NOT NULL DEFAULT 0,
+         currency  TEXT NOT NULL,
+         sortOrder INTEGER NOT NULL DEFAULT 0,
+         createdAt INTEGER NOT NULL,
+         updatedAt INTEGER NOT NULL
+       );`,
+
+      // Recurring bills, for the "Upcoming" list. `dueDay` is a day of the
+      // month (1-31); the next occurrence is computed on read so a bill needs
+      // no upkeep as months roll over.
+      `CREATE TABLE IF NOT EXISTS bills (
+         id         TEXT PRIMARY KEY NOT NULL,
+         name       TEXT NOT NULL,
+         icon       TEXT,
+         amount     INTEGER NOT NULL,
+         currency   TEXT NOT NULL,
+         dueDay     INTEGER NOT NULL,
+         categoryId TEXT REFERENCES categories(id) ON DELETE SET NULL,
+         accountId  TEXT REFERENCES accounts(id) ON DELETE SET NULL,
+         createdAt  INTEGER NOT NULL,
+         updatedAt  INTEGER NOT NULL
+       );`,
+
+      `CREATE INDEX IF NOT EXISTS idx_bills_due ON bills(dueDay);`,
+    ],
+  },
 ];
 
 export const LATEST_VERSION = MIGRATIONS.reduce((max, m) => Math.max(max, m.version), 0);

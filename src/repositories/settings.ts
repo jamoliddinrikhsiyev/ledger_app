@@ -39,6 +39,17 @@ export interface AppSettings {
   biometricLock: boolean;
   /** True once default categories have been seeded. */
   seeded: boolean;
+  /** True once the user has been through onboarding. */
+  onboarded: boolean;
+  /** Shown in the Settings header. Local only — there is no account. */
+  displayName: string;
+  /**
+   * Planned spend for a month, in `baseCurrency` minor units. Drives the
+   * "safe to spend today" figure on Home. Zero hides that card.
+   */
+  monthlyPlan: number;
+  /** Warn when a category passes 80% of its cap. */
+  spendingAlerts: boolean;
   /** Per-service endpoint and credential overrides, keyed by service id. */
   services: Record<string, ServiceOverride>;
   /** Refresh cached FX rates if the newest is older than this. 0 disables. */
@@ -60,6 +71,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   weekStartsOn: 1,
   biometricLock: false,
   seeded: false,
+  onboarded: false,
+  displayName: '',
+  monthlyPlan: 0,
+  spendingAlerts: true,
   services: {},
   ratesMaxAgeHours: 12,
   ratesPathTemplate: '/latest/{base}',

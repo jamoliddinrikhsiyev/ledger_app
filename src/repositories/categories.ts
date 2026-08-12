@@ -64,23 +64,48 @@ export async function remove(id: Id): Promise<void> {
   await run('DELETE FROM categories WHERE id = ?', [id]);
 }
 
-/** Icons are ionicons names; colours are theme tokens resolved in CSS. */
+/**
+ * Category colours come from one accent-to-neutral ramp rather than a rainbow.
+ * Nocturne has no red or green, so a category never signals good or bad by
+ * hue — the numbers do that.
+ */
+export const CATEGORY_RAMP = [
+  '#b5abfc',
+  '#968ae0',
+  '#796cbf',
+  '#9397ab',
+  '#75798c',
+  '#5d5294',
+  '#cfd3e5',
+  '#423a6a',
+];
+
+/** Phosphor glyph names, matching the icon set the design draws with. */
+export const CATEGORY_ICONS = [
+  'ph-tag',
+  'ph-fork-knife',
+  'ph-car',
+  'ph-bag',
+  'ph-heartbeat',
+  'ph-book-open',
+  'ph-barbell',
+  'ph-paw-print',
+  'ph-gift',
+  'ph-airplane-tilt',
+  'ph-game-controller',
+  'ph-graduation-cap',
+];
+
 const DEFAULTS: Omit<New<Category>, 'parentId'>[] = [
-  { name: 'Groceries', kind: 'expense', icon: 'cart-outline', color: 'mint', sortOrder: 0 },
-  { name: 'Dining', kind: 'expense', icon: 'restaurant-outline', color: 'amber', sortOrder: 1 },
-  { name: 'Transport', kind: 'expense', icon: 'car-outline', color: 'sky', sortOrder: 2 },
-  { name: 'Housing', kind: 'expense', icon: 'home-outline', color: 'violet', sortOrder: 3 },
-  { name: 'Utilities', kind: 'expense', icon: 'flash-outline', color: 'teal', sortOrder: 4 },
-  { name: 'Health', kind: 'expense', icon: 'fitness-outline', color: 'rose', sortOrder: 5 },
-  { name: 'Shopping', kind: 'expense', icon: 'bag-handle-outline', color: 'coral', sortOrder: 6 },
-  { name: 'Entertainment', kind: 'expense', icon: 'film-outline', color: 'indigo', sortOrder: 7 },
-  { name: 'Travel', kind: 'expense', icon: 'airplane-outline', color: 'cyan', sortOrder: 8 },
-  { name: 'Subscriptions', kind: 'expense', icon: 'repeat-outline', color: 'plum', sortOrder: 9 },
-  { name: 'Other', kind: 'expense', icon: 'ellipsis-horizontal-outline', color: 'slate', sortOrder: 10 },
-  { name: 'Salary', kind: 'income', icon: 'briefcase-outline', color: 'mint', sortOrder: 0 },
-  { name: 'Freelance', kind: 'income', icon: 'laptop-outline', color: 'sky', sortOrder: 1 },
-  { name: 'Interest', kind: 'income', icon: 'trending-up-outline', color: 'amber', sortOrder: 2 },
-  { name: 'Gifts', kind: 'income', icon: 'gift-outline', color: 'rose', sortOrder: 3 },
+  { name: 'Groceries', kind: 'expense', icon: 'ph-shopping-cart', color: CATEGORY_RAMP[0], sortOrder: 0 },
+  { name: 'Eating out', kind: 'expense', icon: 'ph-fork-knife', color: CATEGORY_RAMP[1], sortOrder: 1 },
+  { name: 'Transport', kind: 'expense', icon: 'ph-car', color: CATEGORY_RAMP[2], sortOrder: 2 },
+  { name: 'Bills', kind: 'expense', icon: 'ph-lightning', color: CATEGORY_RAMP[3], sortOrder: 3 },
+  { name: 'Shopping', kind: 'expense', icon: 'ph-bag', color: CATEGORY_RAMP[4], sortOrder: 4 },
+  { name: 'Health', kind: 'expense', icon: 'ph-heartbeat', color: CATEGORY_RAMP[5], sortOrder: 5 },
+  { name: 'Salary', kind: 'income', icon: 'ph-briefcase', color: CATEGORY_RAMP[0], sortOrder: 0 },
+  { name: 'Freelance', kind: 'income', icon: 'ph-laptop', color: CATEGORY_RAMP[1], sortOrder: 1 },
+  { name: 'Gifts', kind: 'income', icon: 'ph-gift', color: CATEGORY_RAMP[2], sortOrder: 2 },
 ];
 
 /** Seeds the default categories. Called once, guarded by the `seeded` setting. */

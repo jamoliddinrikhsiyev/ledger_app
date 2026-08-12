@@ -144,6 +144,52 @@ export async function spendingByCategory(
   );
 }
 
+export interface MonthlySpend {
+  /** Local midnight on the first of the month. */
+  monthStart: number;
+  total: number;
+}
+
+/**
+ * Expense totals for the last `count` months, oldest first, including months
+ * with no spending so the bar chart keeps a stable width.
+ *
+ * Grouping happens in JS rather than SQL because SQLite's date functions work
+ * in UTC, which would shift a transaction near midnight into the wrong month
+ * for anyone east or west of Greenwich.
+ */
+export async function monthlySpend(
+  count: number,
+  currency: string,
+  at = Date.now(),
+): Promise<MonthlySpend[]> {
+  const now = new Date(at);
+  const firstMonth = new Date(now.getFullYear(), now.getMonth() - (count - 1), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  const rows = await query<{ occurredAt: number; amount: number }>(
+    `SELECT occurredAt, amount FROM transactions
+     WHERE kind = 'expense' AND pending = 0 AND currency = ?
+       AND occurredAt >= ? AND occurredAt < ?`,
+    [currency, firstMonth.getTime(), end.getTime()],
+  );
+
+  const buckets = new Map<number, number>();
+  for (let i = 0; i < count; i += 1) {
+    const month = new Date(firstMonth.getFullYear(), firstMonth.getMonth() + i, 1);
+    buckets.set(month.getTime(), 0);
+  }
+
+  for (const row of rows) {
+    const d = new Date(row.occurredAt);
+    const key = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+    const current = buckets.get(key);
+    if (current !== undefined) buckets.set(key, current + row.amount);
+  }
+
+  return [...buckets].map(([monthStart, total]) => ({ monthStart, total }));
+}
+
 export async function create(draft: New<Transaction>): Promise<Transaction> {
   if (draft.amount <= 0) {
     throw new Error('Transaction amount must be positive; direction comes from `kind`.');

@@ -1,89 +1,188 @@
 /**
- * Theme tokens.
+ * Theme tokens, ported from the Nocturne design system.
  *
- * PLACEHOLDER — these are neutral dark values so the shell is legible before
- * the design is imported. They get replaced by the tokens from the design's
- * `nocturne.css`; component code should read these variables rather than
- * hard-coding colours, so that swap stays confined to this file.
+ * The `--color-*` / `--space-*` / `--radius-*` names are Nocturne's own and are
+ * the source of truth — retune here. The `--ion-*` block below maps them onto
+ * Ionic's variables so built-in components inherit the system instead of
+ * fighting it.
  */
 
 :root {
-  --ion-background-color: #0b0d12;
-  --ion-background-color-rgb: 11, 13, 18;
+  /* — Nocturne core — */
+  --color-bg: #161826;
+  --color-surface: #232532;
+  --color-text: #e9e9ed;
+  --color-accent: #9184d9;
+  --color-accent-2: #a7a1db;
+  --color-divider: color-mix(in srgb, #e9e9ed 16%, transparent);
 
-  --ion-text-color: #e8eaf0;
-  --ion-text-color-rgb: 232, 234, 240;
+  /* Tonal ramps, generated in OKLCH on one shared lightness scale. */
+  --color-neutral-100: #f3f5fe;
+  --color-neutral-200: #e4e7f5;
+  --color-neutral-300: #cfd3e5;
+  --color-neutral-400: #b2b6ca;
+  --color-neutral-500: #9397ab;
+  --color-neutral-600: #75798c;
+  --color-neutral-700: #595d6c;
+  --color-neutral-800: #3f424d;
+  --color-neutral-900: #292b31;
 
-  --ion-color-step-50: #14171f;
-  --ion-color-step-100: #1a1e28;
-  --ion-color-step-150: #202531;
-  --ion-color-step-200: #262c3a;
-  --ion-color-step-250: #2c3343;
-  --ion-color-step-300: #333b4d;
-  --ion-color-step-350: #3a4356;
-  --ion-color-step-400: #414b60;
-  --ion-color-step-450: #4a5569;
-  --ion-color-step-500: #545f73;
-  --ion-color-step-550: #616c80;
-  --ion-color-step-600: #6f798d;
-  --ion-color-step-650: #7e879a;
-  --ion-color-step-700: #8e96a7;
-  --ion-color-step-750: #9fa6b5;
-  --ion-color-step-800: #b1b7c3;
-  --ion-color-step-850: #c4c9d2;
-  --ion-color-step-900: #d7dae1;
-  --ion-color-step-950: #eceef2;
+  --color-accent-100: #f5f4ff;
+  --color-accent-200: #e7e5fe;
+  --color-accent-300: #d2cefd;
+  --color-accent-400: #b5abfc;
+  --color-accent-500: #968ae0;
+  --color-accent-600: #796cbf;
+  --color-accent-700: #5d5294;
+  --color-accent-800: #423a6a;
+  --color-accent-900: #2b2741;
 
-  --ion-item-background: #14171f;
-  --ion-card-background: #14171f;
-  --ion-toolbar-background: #0b0d12;
-  --ion-tab-bar-background: #0f1219;
-  --ion-border-color: #262c3a;
+  --font-heading: 'Inter', system-ui, sans-serif;
+  --font-heading-weight: 500;
+  --font-body: 'Inter', system-ui, sans-serif;
 
-  /* Semantic tokens the finance screens use. */
-  --ledger-positive: #3ddc97;
-  --ledger-negative: #ff6b6b;
-  --ledger-muted: var(--ion-color-step-650);
+  --space-1: 2.8px;
+  --space-2: 5.6px;
+  --space-3: 8.4px;
+  --space-4: 11.2px;
+  --space-6: 16.8px;
+  --space-8: 22.4px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+
+  --shadow-sm: 0 0 0 1px #3f424d;
+  --shadow-md: 0 0 0 1px #595d6c, 0 6px 18px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 0 0 1px #9397ab, 0 16px 40px rgba(0, 0, 0, 0.65);
+
+  /* Chrome heights the fixed header and tab bar reserve. */
+  --chrome-top: 96px;
+  --chrome-bottom: 82px;
 }
 
+/* — Ionic mapping — */
 :root {
-  --ion-color-primary: #6c8cff;
-  --ion-color-primary-rgb: 108, 140, 255;
+  --ion-background-color: var(--color-bg);
+  --ion-background-color-rgb: 22, 24, 38;
+  --ion-text-color: var(--color-text);
+  --ion-text-color-rgb: 233, 233, 237;
+
+  --ion-font-family: var(--font-body);
+  --ion-item-background: var(--color-surface);
+  --ion-card-background: var(--color-surface);
+  --ion-toolbar-background: var(--color-bg);
+  --ion-tab-bar-background: var(--color-bg);
+  --ion-border-color: var(--color-neutral-900);
+  --ion-overlay-background-color: var(--color-surface);
+
+  --ion-color-primary: var(--color-accent);
+  --ion-color-primary-rgb: 145, 132, 217;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #5f7ce0;
-  --ion-color-primary-tint: #7b98ff;
+  --ion-color-primary-shade: #7f74bf;
+  --ion-color-primary-tint: #9d92dd;
 
-  --ion-color-success: #3ddc97;
-  --ion-color-success-rgb: 61, 220, 151;
-  --ion-color-success-contrast: #00160d;
-  --ion-color-success-contrast-rgb: 0, 22, 13;
-  --ion-color-success-shade: #36c285;
-  --ion-color-success-tint: #50e0a2;
-
-  --ion-color-danger: #ff6b6b;
-  --ion-color-danger-rgb: 255, 107, 107;
-  --ion-color-danger-contrast: #2a0000;
-  --ion-color-danger-contrast-rgb: 42, 0, 0;
-  --ion-color-danger-shade: #e05e5e;
-  --ion-color-danger-tint: #ff7a7a;
-
-  --ion-color-warning: #ffc857;
-  --ion-color-warning-rgb: 255, 200, 87;
-  --ion-color-warning-contrast: #2a1d00;
-  --ion-color-warning-contrast-rgb: 42, 29, 0;
-  --ion-color-warning-shade: #e0b04d;
-  --ion-color-warning-tint: #ffce68;
-
-  --ion-color-medium: #7e879a;
-  --ion-color-medium-rgb: 126, 135, 154;
+  --ion-color-medium: var(--color-neutral-600);
+  --ion-color-medium-rgb: 117, 121, 140;
   --ion-color-medium-contrast: #ffffff;
   --ion-color-medium-contrast-rgb: 255, 255, 255;
-  --ion-color-medium-shade: #6f7787;
-  --ion-color-medium-tint: #8b93a4;
+  --ion-color-medium-shade: #676a7b;
+  --ion-color-medium-tint: #838698;
+
+  /* Nocturne has no red/green: over-budget and income both speak in accent
+     tints, so nothing in the palette shouts. Keeping that here means a stray
+     `color="danger"` cannot smuggle a red into the interface. */
+  --ion-color-danger: var(--color-accent-300);
+  --ion-color-danger-rgb: 210, 206, 253;
+  --ion-color-danger-contrast: #161826;
+  --ion-color-danger-contrast-rgb: 22, 24, 38;
+  --ion-color-danger-shade: #b9b5df;
+  --ion-color-danger-tint: #d7d3fd;
+
+  --ion-color-success: var(--color-accent-400);
+  --ion-color-success-rgb: 181, 171, 252;
+  --ion-color-success-contrast: #161826;
+  --ion-color-success-contrast-rgb: 22, 24, 38;
+  --ion-color-success-shade: #9f96de;
+  --ion-color-success-tint: #bcb3fc;
 }
 
+html,
 body {
-  background: var(--ion-background-color);
-  color: var(--ion-text-color);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  margin: 0;
+}
+
+ion-app,
+ion-content {
+  --background: var(--color-bg);
+  background: var(--color-bg);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+/* Scrollbars are hidden in the design; the phone frame has no room for them. */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+/* A Nocturne signature: freestanding rules fade out at both ends rather than
+   stopping cleanly. Box outlines and in-control separators stay solid. */
+.rule {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-divider) 40px,
+    var(--color-divider) calc(100% - 40px),
+    transparent
+  );
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rise {
+  animation: rise 0.25s ease both;
 }

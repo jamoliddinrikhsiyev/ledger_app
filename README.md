@@ -15,13 +15,27 @@ blocking request on any screen.
 | Repositories (accounts, transactions, categories, budgets, rates, settings) | done |
 | Base currency + FX conversion | done, cached rates, works offline |
 | Service layer + kill switch + offline outbox | done, all services closed |
-| App shell + theme tokens | placeholder — see `src/theme/variables.css` |
-| UI (pages, components) | **pending — blocked on the design import** |
+| UI — 11 screens, tab bar, add overlay, sheets | done, built to the Nocturne design |
+| Native builds | iOS blocked upstream; Android via CI (see below) |
 
-`src/App.tsx` is a temporary dev harness, not the product UI: it boots the
-database, exercises a write, and reports the live state of the data and service
-layers so the stack can actually be launched and driven. The real tabbed UI
-replaces it when the design lands.
+## The design
+
+The interface is a port of the Nocturne "Ledger" design, read from its Claude
+Design project. `src/theme/variables.css` holds Nocturne's own tokens
+(`--color-*`, `--space-*`, `--radius-*`) as the source of truth and maps them
+onto Ionic's variables; `src/ui/primitives.tsx` builds the system's components
+from those tokens. No screen hard-codes a colour.
+
+Two deliberate departures from the design, both forced by what this app is:
+
+- **Onboarding does not connect a bank.** The original flow was built around
+  bank sync. Every service here is closed and the data is local, so the same
+  four beats set up a first account and a monthly spending plan instead.
+- **Accounts are entered by hand**, and the Accounts screen says so rather than
+  showing a "synced 12 minutes ago" line it cannot honour.
+
+Icons are Phosphor and the typeface is Inter, both bundled rather than pulled
+from a CDN — the app has to render identically with no connection.
 
 ## Running
 
@@ -34,10 +48,11 @@ npm run verify:rates   # rate-response parser against real provider payloads
 npm run drive          # boots the app in a real browser and exercises it
 ```
 
-`npm run drive` needs the dev server up. It writes data, switches the base
-currency, pokes the closed rates service, reloads to prove persistence, and
-fails if the page logged an error **or made any request off-origin** — that last
-check is what keeps "no external calls" honest.
+`npm run drive` needs the dev server up. It walks onboarding, logs a transaction
+through the keypad, creates a budget and a savings goal, visits every screen,
+and reloads to prove persistence — capturing a screenshot of each into
+`.screenshots/`. It fails if the page logged an error **or made any request
+off-origin**; that last check is what keeps "no external calls" honest.
 
 ### The sql.js version is pinned on purpose
 
@@ -71,6 +86,23 @@ npm run sync       # build + cap sync (both platforms)
 npm run ios        # sync + open Xcode
 npm run android    # sync + open Android Studio
 ```
+
+### Android APK in the cloud — no local SDK needed
+
+`.github/workflows/android.yml` builds an installable debug APK on a GitHub
+runner, which already has the JDK and Android SDK. Push the workflow, then run
+it from the repo's **Actions → Android APK → Run workflow**. The APK lands in
+the run's artifacts as `ledger-debug-apk`.
+
+It regenerates `android/` with `cap add` because that directory is gitignored
+while nothing native is customised. Once you commit `android/` (see
+`.gitignore`), that step turns into a no-op and your native changes are kept.
+
+Debug APKs are signed with the auto-generated debug key — installable on a
+phone with USB debugging or by sideloading, but not distributable. A Play Store
+build needs `assembleRelease` plus a real keystore in repository secrets.
+
+### Local native builds
 
 Neither compiles on this machine yet:
 

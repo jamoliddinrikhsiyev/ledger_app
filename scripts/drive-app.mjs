@@ -1,9 +1,11 @@
 /**
- * Drives the running app in a real browser: boots it, writes data, changes the
- * base currency, and pokes the closed rates service.
+ * Drives the app through onboarding and every screen in a real browser,
+ * capturing a screenshot of each.
  *
  * This is the only way to exercise the browser SQLite path (jeep-sqlite + wasm
- * + IndexedDB), which node-side checks cannot reach.
+ * + IndexedDB) and the only way to see whether the UI actually renders. It also
+ * fails if the page makes any off-origin request, which is what keeps the
+ * "nothing leaves the device" claim honest.
  *
  *   node scripts/drive-app.mjs [url]
  */
@@ -12,77 +14,147 @@ import { chromium } from 'playwright';
 
 const url = process.argv[2] ?? 'http://localhost:5180/';
 const shots = new URL('../.screenshots/', import.meta.url).pathname;
+const origin = new URL(url).origin;
 
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 430, height: 932 } });
+const context = await browser.newContext({
+  viewport: { width: 402, height: 874 },
+  deviceScaleFactor: 2,
+});
+const page = await context.newPage();
 
-const consoleErrors = [];
-const requests = [];
-page.on('console', (m) => m.type() === 'error' && consoleErrors.push(m.text()));
-page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`));
-// Anything leaving the origin would mean the service gates leaked.
+const problems = [];
+const offOrigin = [];
+page.on('console', (m) => m.type() === 'error' && problems.push(`console: ${m.text()}`));
+page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`));
 page.on('request', (r) => {
-  if (!r.url().startsWith(new URL(url).origin) && !r.url().startsWith('data:')) {
-    requests.push(`${r.method()} ${r.url()}`);
+  const target = r.url();
+  if (!target.startsWith(origin) && !target.startsWith('data:') && !target.startsWith('blob:')) {
+    offOrigin.push(`${r.method()} ${target}`);
   }
 });
 
-function log(label, value) {
-  console.log(`${label.padEnd(28)} ${value}`);
+let step = 0;
+async function shot(name) {
+  step += 1;
+  await page.waitForTimeout(450);
+  await page.screenshot({ path: `${shots}${String(step).padStart(2, '0')}-${name}.png` });
+  console.log(`  captured ${name}`);
 }
 
+async function tapTab(label) {
+  await page.locator('nav button', { hasText: label }).first().click();
+  await page.waitForTimeout(350);
+}
+
+console.log('onboarding');
 await page.goto(url, { waitUntil: 'networkidle' });
+await page.getByText('One running total.').waitFor({ timeout: 30_000 });
+await shot('onboarding-intro');
 
-// The card only renders once the database is open and read.
-await page.getByText('Schema version').waitFor({ timeout: 30_000 });
-log('database opened', 'yes');
+await page.getByRole('button', { name: 'Set up an account' }).click();
+await page.getByPlaceholder('Name, e.g. Everyday').fill('Everyday');
+await page.locator('button', { hasText: 'Card' }).first().click();
+await page.getByPlaceholder('0').last().fill('2400');
+await shot('onboarding-account');
 
-const readNote = async (label) =>
-  (await page.locator('ion-item', { hasText: label }).first().locator('ion-note').innerText()).trim();
+await page.getByRole('button', { name: 'Continue' }).click();
+await page.getByPlaceholder('0').first().fill('1800');
+await shot('onboarding-plan');
 
-log('schema version', await readNote('Schema version'));
-log('seeded categories', await readNote('Seeded categories'));
-log('accounts (before)', await readNote('Accounts'));
-log('transactions (before)', await readNote('Transactions'));
+await page.getByRole('button', { name: 'Open Ledger' }).click();
+await page.getByText('Net worth').waitFor({ timeout: 20_000 });
+console.log('home');
+await shot('home-empty');
 
-await page.screenshot({ path: `${shots}01-boot.png`, fullPage: true });
+// --- log a transaction through the keypad ---
+console.log('add transaction');
+await page.locator('nav button', { hasText: 'Add' }).click();
+await page.getByText('Amount').waitFor();
+// Exact-name matching. Building a regex from the key would turn "\2" into a
+// backreference and silently press the wrong button.
+const keypad = page.locator('div[style*="repeat(3, 1fr)"]');
+for (const key of ['4', '2', '.', '5', '0']) {
+  await keypad.getByRole('button', { name: key, exact: true }).click();
+}
+await page.locator('button', { hasText: 'Groceries' }).first().click();
+await page.getByPlaceholder('Who or what (optional)').fill('Corner shop');
+await shot('add-transaction');
 
-// --- write path ---
-await page.getByRole('button', { name: 'Write sample data' }).click();
-await page.getByText('Wrote 1 account').waitFor({ timeout: 15_000 });
-log('accounts (after write)', await readNote('Accounts'));
-log('transactions (after write)', await readNote('Transactions'));
+await page.getByRole('button', { name: 'Save transaction' }).click();
+await page.getByText('Net worth').waitFor({ timeout: 20_000 });
+await shot('home-with-data');
 
-const netWorth = await page.locator('ion-card-title', { hasText: 'Net worth' }).innerText();
-log('derived net worth', netWorth.replace(/\s+/g, ' '));
-await page.screenshot({ path: `${shots}02-after-write.png`, fullPage: true });
+const netWorth = await page.locator('text=Net worth').locator('..').innerText();
+console.log(`  net worth block: ${netWorth.split('\n').slice(0, 3).join(' | ')}`);
 
-// --- base currency change ---
-await page.locator('ion-select').click();
-await page.locator('ion-alert button', { hasText: 'UZS' }).first().click();
-await page.locator('ion-alert button', { hasText: /^OK$/ }).click();
-await page.waitForTimeout(1500);
-const converted = await page.locator('ion-card-title', { hasText: 'Net worth' }).innerText();
-log('net worth after switch', converted.replace(/\s+/g, ' '));
-const warning = await page.locator('ion-note[color="warning"]').count();
-log('unconverted-currency flag', warning > 0 ? 'shown' : 'none');
-await page.screenshot({ path: `${shots}03-currency-uzs.png`, fullPage: true });
+console.log('transactions');
+await page.getByRole('button', { name: 'See all' }).click();
+await page.waitForTimeout(400);
+await shot('transactions');
 
-// --- the closed service gate ---
-await page.getByRole('button', { name: 'Try rates refresh' }).click();
-await page.locator('#status-message').waitFor({ timeout: 15_000 });
-log('rates refresh result', (await page.locator('#status-message').innerText()).trim());
-await page.screenshot({ path: `${shots}04-rates-gate.png`, fullPage: true });
+console.log('insights');
+await tapTab('Insights');
+await shot('insights');
 
-// --- persistence across a reload ---
+// --- budgets: create one, so the populated state is what gets verified ---
+console.log('budgets');
+await tapTab('Budgets');
+await shot('budgets-empty');
+await page.getByRole('button', { name: 'Set a budget' }).click();
+await page.locator('div[role], button', { hasText: 'Groceries' }).first().click();
+await page.getByPlaceholder('0').fill('400');
+await page.getByRole('button', { name: 'Set cap' }).click();
+await page.waitForTimeout(600);
+await shot('budgets');
+
+console.log('more');
+await tapTab('More');
+await shot('more');
+
+// --- secondary screens from the More menu ---
+for (const [row, name] of [
+  ['Accounts', 'accounts'],
+  ['Categories', 'categories'],
+  ['Currency', 'currency'],
+]) {
+  console.log(name);
+  await tapTab('More');
+  await page.locator('main button', { hasText: row }).first().click();
+  await page.waitForTimeout(400);
+  await shot(name);
+}
+
+// --- goals: create one, then contribute to it ---
+console.log('goals');
+await tapTab('More');
+await page.locator('main button', { hasText: 'Savings goals' }).first().click();
+await page.getByRole('button', { name: 'New savings goal' }).click();
+await page.getByPlaceholder('Goal, e.g. Deposit on a flat').fill('Emergency fund');
+await page.getByPlaceholder('10000').fill('5000');
+await page.getByRole('button', { name: 'Set target' }).click();
+await page.waitForTimeout(700);
+await page.locator('main button', { hasText: 'Emergency fund' }).first().click();
+await page.getByPlaceholder('Amount').fill('750');
+await page.getByRole('button', { name: 'Move to savings' }).click();
+await page.waitForTimeout(700);
+await shot('goals');
+
+console.log('settings');
+await page.locator('header button[aria-label="Settings"]').click();
+await page.waitForTimeout(400);
+await shot('settings');
+
+// --- persistence: reload lands on the last route, so come back to Home ---
 await page.reload({ waitUntil: 'networkidle' });
-await page.getByText('Schema version').waitFor({ timeout: 30_000 });
-log('accounts after reload', await readNote('Accounts'));
-log('transactions after reload', await readNote('Transactions'));
+await page.locator('nav button', { hasText: 'Home' }).waitFor({ timeout: 30_000 });
+await tapTab('Home');
+await page.getByText('Net worth').waitFor({ timeout: 20_000 });
+const survived = await page.locator('text=Corner shop').count();
+console.log(`\ntransaction survived reload: ${survived > 0 ? 'yes' : 'NO'}`);
 
-console.log('');
-log('outbound requests', requests.length === 0 ? 'none (0)' : requests.join(', '));
-log('console errors', consoleErrors.length === 0 ? 'none' : consoleErrors.join(' | '));
+console.log(`off-origin requests:          ${offOrigin.length === 0 ? 'none' : offOrigin.join(', ')}`);
+console.log(`console errors:               ${problems.length === 0 ? 'none' : problems.join(' | ')}`);
 
 await browser.close();
-process.exit(consoleErrors.length === 0 && requests.length === 0 ? 0 : 1);
+process.exit(problems.length === 0 && offOrigin.length === 0 && survived > 0 ? 0 : 1);

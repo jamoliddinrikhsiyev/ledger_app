@@ -102,6 +102,52 @@ export interface BudgetProgress extends Budget {
   periodEnd: Timestamp;
 }
 
+export interface Goal {
+  id: Id;
+  name: string;
+  icon: string | null;
+  /** What the user is saving towards, in minor units. */
+  target: number;
+  /** Put aside so far, in minor units. */
+  saved: number;
+  /** Intended monthly contribution; drives the projected finish date. */
+  perMonth: number;
+  currency: CurrencyCode;
+  sortOrder: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/** A goal with its derived progress. Never persisted. */
+export interface GoalProgress extends Goal {
+  /** 0..1, clamped. */
+  ratio: number;
+  /** target − saved, floored at zero. */
+  remaining: number;
+  /** Projected completion, or null when funded or with no monthly amount. */
+  etaMonths: number | null;
+}
+
+export interface Bill {
+  id: Id;
+  name: string;
+  icon: string | null;
+  amount: number;
+  currency: CurrencyCode;
+  /** Day of the month, 1-31. Clamped to the month's length on read. */
+  dueDay: number;
+  categoryId: Id | null;
+  accountId: Id | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/** A bill with its next occurrence resolved. Never persisted. */
+export interface UpcomingBill extends Bill {
+  dueAt: Timestamp;
+  daysUntil: number;
+}
+
 /** Draft passed to repository `create` methods; ids and stamps are assigned there. */
 export type New<T extends { id: Id; createdAt: Timestamp; updatedAt: Timestamp }> = Omit<
   T,
