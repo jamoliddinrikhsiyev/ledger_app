@@ -16,7 +16,8 @@ blocking request on any screen.
 | Base currency + FX conversion | done, cached rates, works offline |
 | Service layer + kill switch + offline outbox | done, all services closed |
 | UI — 11 screens, tab bar, add overlay, sheets | done, built to the Nocturne design |
-| Native builds | iOS blocked upstream; Android via CI (see below) |
+| iOS | runs on the simulator; native SQLite verified |
+| Android | debug APK builds in CI |
 
 ## The design
 
@@ -77,22 +78,53 @@ npm run preview    # serve dist/ locally
 `sql-wasm.wasm` in `public/assets/`, and the build copies it through — check it
 landed in `dist/assets/` if the database fails to open in production.
 
-### Native — projects generate, compile is blocked
-
-Both platforms are added and `npx cap sync` copies the web build into them:
+### iOS — runs natively
 
 ```sh
-npm run sync       # build + cap sync (both platforms)
-npm run ios        # sync + open Xcode
-npm run android    # sync + open Android Studio
+npm run ios        # build + cap sync + open Xcode, then hit Run
 ```
+
+Verified on the iOS 26.1 simulator: the app launches, the database opens at
+`Documents/ledgerSQLite.db` at `user_version = 3` with the default categories
+seeded.
+
+**The iOS project must be generated with CocoaPods, not SPM.** Capacitor 8
+prefers SPM when plugins ship a `Package.swift`, and on that path
+`@capacitor-community/sqlite` pulls `ZIPFoundation from: "0.9.0"` → 0.9.20, a
+package still on `swift-tools-version:5.0` with `.iOS(.v9)`. Under the Xcode 26
+toolchain that target never produces a `.swiftmodule`, and the plugin dies with:
+
+```
+UtilsDownloadFromHTTP.swift:9:8: error: Unable to find module dependency: 'ZIPFoundation'
+```
+
+The podspec route sidesteps the SPM manifest entirely — it pins
+`swift_version = '5.1'` and `ios.deployment_target = '15.0'` and takes
+ZIPFoundation from trunk. So if `ios/` ever has to be regenerated:
+
+```sh
+rm -rf ios && npx cap add ios --packagemanager Cocoapods   # NOT the default
+```
+
+Requires `brew install cocoapods`. Xcode also needs the iOS platform component,
+which is a separate multi-gigabyte download and is *not* implied by the SDK
+being listed in `xcodebuild -showsdks` — without it every destination is
+rejected with a misleading "iOS 26.1 is not installed":
+
+```sh
+xcodebuild -downloadPlatform iOS
+```
+
+Running on your own iPhone needs only a free Apple ID (set the team in Xcode →
+Signing & Capabilities); such a build expires after seven days. TestFlight needs
+the paid Apple Developer Program.
 
 ### Android APK in the cloud — no local SDK needed
 
 `.github/workflows/android.yml` builds an installable debug APK on a GitHub
-runner, which already has the JDK and Android SDK. Push the workflow, then run
-it from the repo's **Actions → Android APK → Run workflow**. The APK lands in
-the run's artifacts as `ledger-debug-apk`.
+runner, which already has the JDK and Android SDK. Run it from the repo's
+**Actions → Android APK → Run workflow**, or just push to `main`. The APK lands
+in the run's artifacts as `ledger-debug-apk` (~13 MB).
 
 It regenerates `android/` with `cap add` because that directory is gitignored
 while nothing native is customised. Once you commit `android/` (see
@@ -102,41 +134,8 @@ Debug APKs are signed with the auto-generated debug key — installable on a
 phone with USB debugging or by sideloading, but not distributable. A Play Store
 build needs `assembleRelease` plus a real keystore in repository secrets.
 
-### Local native builds
-
-Neither compiles on this machine yet:
-
-| Platform | State | Needed |
-| --- | --- | --- |
-| iOS | project generates, SPM resolves all 6 plugins, everything compiles **except** `CapacitorSQLitePlugin` | see below |
-| Android | project generates | JDK 17+ and the Android SDK — neither is installed |
-
-**The iOS blocker is upstream, not ours.** `@capacitor-community/sqlite`
-declares its SPM dependency as `ZIPFoundation from: "0.9.0"`, which resolves to
-0.9.20 — a package still on `swift-tools-version:5.0` with `.iOS(.v9)`. Under
-the Xcode 26 toolchain that target never produces a `.swiftmodule`, so the
-plugin fails with:
-
-```
-UtilsDownloadFromHTTP.swift:9:8: error: Unable to find module dependency: 'ZIPFoundation'
-```
-
-ZIPFoundation is only used by the plugin's "download a zipped database over
-HTTP" helper, which this app never calls — but it cannot be excluded from an SPM
-target.
-
-The fix when native builds are picked up: regenerate the iOS project with
-CocoaPods instead of SPM. The plugin's podspec sets `swift_version = '5.1'` and
-`ios.deployment_target = '15.0'` explicitly and pulls ZIPFoundation from trunk,
-which sidesteps the SPM manifest entirely.
-
-```sh
-brew install cocoapods
-rm -rf ios && npx cap add ios      # CocoaPods is the default package manager
-```
-
-Deferred deliberately: the UI is still a dev harness, so there is nothing to
-ship natively yet.
+Building Android locally instead needs a JDK 17+ and the Android SDK; neither is
+required if you use the workflow.
 
 ## Architecture
 
